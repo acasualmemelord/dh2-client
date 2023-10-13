@@ -354,8 +354,8 @@
 
 			if (!this.curFolder) {
 				buf += '<h2>Hi</h2>';
-				buf += '<p>Did you have a good day?</p>';
-				buf += '<p><button class="button" name="greeting" value="Y"><i class="fa fa-smile-o"></i> Yes, my day was pretty good</button> <button class="button" name="greeting" value="N"><i class="fa fa-frown-o"></i> No, it wasn\'t great</button></p>';
+				buf += '<p>Right here it says "UPS: Our Fastest Ground Shipping Ever." You know, what if it said "Our fastest and hardest boner?" Quickest, uh, speed for getting a boner?</p>';
+				buf += '<p><button class="button" name="greeting" value="Y"><i class="fa fa-smile-o"></i> Alright, thanks guys</button> <button class="button" name="greeting" value="N"><i class="fa fa-frown-o"></i> What</button></p>';
 				buf += '<h2>All teams <small style="font-weight: normal">(' + teams.length + ')</small></h2>';
 			} else {
 				if (this.curFolder.slice(-1) === '/') {
