@@ -2816,11 +2816,11 @@ class BattleStatGuesser {
 		if (stat === 'hp') {
 			if (baseStat === 1) return 1;
 			if (!this.supportsEVs) return ~~(~~(2 * baseStat + iv + 100) * level / 100 + 10) + (this.supportsAVs ? ev : 0);
-			return ~~(~~(2 * baseStat + iv + ~~(ev) + 100) * level / 100 + 10);
+			return ~~((2 * (baseStat + iv) + ev) / 100 + 1) * level + 10;
 		}
-		let val = ~~(~~(2 * baseStat + iv + ~~(ev)) * level / 100 + 5);
+		let val = val = ~~((2 * (baseStat + iv) + ev) / 100 * level + 5);
 		if (!this.supportsEVs) {
-			val = ~~(~~(2 * baseStat + iv) * level / 100 + 5);
+			val = ~~((2 * (baseStat + iv) + ev) / 100 * level + 5);
 		}
 		if (natureOverride) {
 			val *= natureOverride;
