@@ -585,6 +585,76 @@ Storage.loadTeams = function () {
 	} catch (e) {}
 };
 
+/** returns false to add the team, true to not add it, 'rename' to add it under a diff name */
+Storage.compareTeams = function (serverTeam, localTeam) {
+	// if titles match exactly and mons are the same, assume they're the same team
+	// if they don't match, it might be edited, but we'll go ahead and add it to the user's
+	// teambuilder since they may want that old version around. just go ahead and edit the name
+	var mons = serverTeam.team.split(',');
+	var matches = 0;
+	var otherMons = Storage.unpackTeam(localTeam.team);
+	for (var i = 0; i < mons.length; i++) {
+		for (var j = 0; j < otherMons.length; j++) {
+			if (toID(otherMons[j].species) === toID(mons[i])) {
+				matches++;
+			}
+		}
+	}
+	var sanitize = function (name) {
+		return (name || "").replace(/\s+\(server version\)/g, '').trim();
+	};
+	var nameMatches = sanitize(serverTeam.name) === sanitize(localTeam.name);
+	if (!(nameMatches && serverTeam.format === localTeam.format)) {
+		return false;
+	}
+	// if it's been edited since, invalidate the team id on this one (count it as new)
+	// and load from server
+	if (mons.length !== otherMons.length || matches !== otherMons.length) return 'rename';
+	if (serverTeam.teamid === localTeam.teamid && localTeam.teamid) return true;
+	return true;
+};
+
+Storage.loadRemoteTeams = function (after) {
+	$.get(app.user.getActionPHP(), {act: 'getteams'}, Storage.safeJSON(function (data) {
+		if (data.actionerror) {
+			return app.addPopupMessage('Error loading uploaded teams: ' + data.actionerror);
+		}
+		for (var i = 0; i < data.teams.length; i++) {
+			var team = data.teams[i];
+			var matched = false;
+			for (var j = 0; j < Storage.teams.length; j++) {
+				var curTeam = Storage.teams[j];
+				var match = Storage.compareTeams(team, curTeam);
+				if (match === true) {
+					// prioritize locally saved teams over remote
+					// as so to not overwrite changes
+					matched = true;
+					break;
+				}
+				if (match === 'rename') {
+					delete curTeam.teamid;
+					if (!team.name.endsWith(' (server version)')) {
+						team.name += ' (server version)';
+					}
+				}
+			}
+			team.loaded = false;
+			if (!matched) {
+				// hack so that it shows up in the format selector list
+				team.folder = '';
+				// team comes down from loginserver as comma-separated list of mons
+				// to save bandwidth
+				var mons = team.team.split(',').map(function (mon) {
+					return {species: mon};
+				});
+				team.team = Storage.packTeam(mons);
+				Storage.teams.unshift(team);
+			}
+		}
+		if (typeof after === 'function') after();
+	}));
+};
+
 Storage.loadPackedTeams = function (buffer) {
 	try {
 		this.teams = Storage.unpackAllTeams(buffer);
@@ -669,16 +739,20 @@ Storage.unpackAllTeams = function (buffer) {
 };
 
 Storage.unpackLine = function (line) {
+	var leftBracketIndex = line.indexOf('[');
+	if (leftBracketIndex < 0) leftBracketIndex = 0;
 	var pipeIndex = line.indexOf('|');
 	if (pipeIndex < 0) return null;
+	if (leftBracketIndex > pipeIndex) leftBracketIndex = 0;
 	var bracketIndex = line.indexOf(']');
 	if (bracketIndex > pipeIndex) bracketIndex = -1;
 	var isBox = line.slice(0, bracketIndex).endsWith('-box');
 	var slashIndex = line.lastIndexOf('/', pipeIndex);
 	if (slashIndex < 0) slashIndex = bracketIndex; // line.slice(slashIndex + 1, pipeIndex) will be ''
-	var format = bracketIndex > 0 ? line.slice(0, isBox ? bracketIndex - 4 : bracketIndex) : 'gen9';
+	var format = bracketIndex > 0 ? line.slice((leftBracketIndex ? leftBracketIndex + 1 : 0), isBox ? bracketIndex - 4 : bracketIndex) : 'gen9';
 	if (format && format.slice(0, 3) !== 'gen') format = 'gen6' + format;
 	return {
+		teamid: leftBracketIndex > 0 ? Number(line.slice(0, leftBracketIndex)) : undefined,
 		name: line.slice(slashIndex + 1, pipeIndex),
 		format: format,
 		gen: parseInt(format[3], 10) || 6,
@@ -691,7 +765,12 @@ Storage.unpackLine = function (line) {
 
 Storage.packAllTeams = function (teams) {
 	return teams.map(function (team) {
-		return (team.format ? '' + team.format + (team.capacity === 24 ? '-box]' : ']') : '') + (team.folder ? '' + team.folder + '/' : '') + team.name + '|' + Storage.getPackedTeam(team);
+		return (
+			(team.teamid ? '' + team.teamid + '[' : '') +
+			(team.format ? '' + team.format + (team.capacity === 24 ? '-box]' : ']') : '') +
+			(team.folder ? '' + team.folder + '/' : '') + team.name + '|' +
+			Storage.getPackedTeam(team)
+		);
 	}).join('\n');
 };
 
