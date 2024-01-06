@@ -180,7 +180,7 @@ statNamesExceptHP=['atk','def','spa','spd','spe'];this.
 pokeballs=null;this.
 
 
-modResourcePrefix='https://raw.githubusercontent.com/scoopapa/dh2/master/data/mods/';this.
+modResourcePrefix='https://raw.githubusercontent.com/acasualmemelord/dh2/master/data/mods/';this.
 
 
 resourcePrefix=function(_window$document){
