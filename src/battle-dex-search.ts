@@ -1672,7 +1672,7 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 		const isHackmons = (format.includes('hackmons') || format.endsWith('bh'));
 		const isSTABmons = (format.includes('stabmons') || format === 'staaabmons');
 		const isStylemons = format.includes('stylemons');
-		const isConvergence = format.includes('convergence');
+		const isConvergence = format.includes('stylemons');
 		const isTradebacks = (format.includes('tradebacks') || this.mod === 'gen1expansionpack' || this.mod === 'gen1burgundy');
 		const regionBornLegality = dex.gen >= 6 &&
 			/^battle(spot|stadium|festival)/.test(format) || format.startsWith('vgc') ||
@@ -1813,48 +1813,9 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 			}
 		}
 		if (isStylemons) {
-			for (let id in this.getTable()) {
-				const move = dex.moves.get(id);
-				if (moves.includes(move.id)) continue;
-				//if (move.gen > dex.gen) continue;
-				//if (move.isZ || move.isMax || (move.isNonstandard && move.isNonstandard !== 'Unobtainable')) continue;
-
-				for (let i = dex.gen; i >= species.gen && i >= move.gen; i--) {
-					const genDex = Dex.forGen(i);
-
-					const pokemon = genDex.species.get(species.name);
-					let baseSpecies = genDex.species.get(pokemon.changesFrom || pokemon.name);
-					const otherStyles = genDex.species.filter(s => (
-											s.spriteid === pokemon.spriteid
-										));
-					if (pokemon.battleOnly && typeof pokemon.battleOnly === 'string') {
-						species = dex.species.get(pokemon.battleOnly);
-					}
-					const excludedForme = (s: Species) => [
-						'Alola', 'Alola-Totem', 'Galar', 'Galar-Zen', 'Hisui', 'Paldea', 'Paldea-Combat', 'Paldea-Blaze', 'Paldea-Aqua',
-					].includes(s.forme);
-					if (baseSpecies.otherFormes && !['Wormadam', 'Urshifu'].includes(baseSpecies.baseSpecies)) {
-						if (!excludedForme(species)) speciesTypes.push(...baseSpecies.types);
-						for (const formeName of baseSpecies.otherFormes) {
-							const forme = dex.species.get(formeName);
-							if (!forme.battleOnly && !excludedForme(forme)) speciesTypes.push(...forme.types);
-						}
-					}
-				}
-				let valid = false;
-				for (let type of moveTypes) {
-					if (speciesTypes.includes(type)) {
-						valid = true;
-						break;
-					}
-				}
-				if (valid) moves.push(id);
-			}
-		}
-		if (isConvergence) {
-            var convergence = {};
-            for (const convergenceSpecies in BattlePokedex) {
-                let speciesConvergence = dex.species.get(convergenceSpecies);
+            var stylemons = {};
+            for (const stylemonSpecies in BattlePokedex) {
+                let speciesConvergence = dex.species.get(stylemonSpecies);
                 let learnsetidConvergence = this.firstLearnsetid(speciesConvergence.id);
                 while (learnsetidConvergence) {
                     let learnset = lsetTable.learnsets[learnsetidConvergence];
@@ -1863,51 +1824,11 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
                             let learnsetEntry = learnset[moveid];
                             const move = dex.moves.get(moveid);
                             const minGenCode: {[gen: number]: string} = {6: 'p', 7: 'q', 8: 'g', 9: 'a'};
-                            if (regionBornLegality && !learnsetEntry.includes(minGenCode[dex.gen])) {
-                                continue;
-                            }
-                            if (
-                                !learnsetEntry.includes(gen) &&
-                                (!isTradebacks ? true : !(move.gen <= dex.gen && learnsetEntry.includes('' + (dex.gen + 1))))
-                            ) {
-                                continue;
-                            }
-                            if (this.formatType !== 'natdex' && move.isNonstandard === "Past") {
-                                continue;
-                            }
-                            if (
-                                this.formatType?.startsWith('dlc1') &&
-                                BattleTeambuilderTable['gen8dlc1']?.nonstandardMoves.includes(moveid)
-                            ) {
-                                continue;
-                            }
-                            if (
-                                this.formatType?.includes('predlc') && this.formatType !== 'predlcnatdex' &&
-                                BattleTeambuilderTable['gen9predlc']?.nonstandardMoves.includes(moveid)
-                            ) {
-                                continue;
-                            }
-                            if (
-                                this.formatType?.includes('svdlc1') && this.formatType !== 'svdlc1natdex' &&
-                                BattleTeambuilderTable['gen9dlc1']?.nonstandardMoves.includes(moveid)
-                            ) {
-                                continue;
-                            }
-                            const type1 = BattlePokedex[convergenceSpecies].types[0];
-                            var type2 = BattlePokedex[convergenceSpecies].types[1];
-                            if (type2 == undefined) type2 = type1;
-                            if (!convergence[type1 + ', ' + type2]) convergence[type1 + ', ' + type2] = [];
-                            if (convergence[type1 + ', ' + type2].includes(moveid)) continue;
-                            convergence[type1 + ', ' + type2].push(moveid);
-                            if (!convergence[type2 + ', ' + type1]) convergence[type2 + ', ' + type1] = [];
-                            if (convergence[type2 + ', ' + type1].includes(moveid)) continue;
-                            convergence[type2 + ', ' + type1].push(moveid);
-                            if (moveid === 'sketch') sketch = true;
-                            if (moveid === 'hiddenpower') {
-                                moves.push(
-                                    'hiddenpowerbug', 'hiddenpowerdark', 'hiddenpowerdragon', 'hiddenpowerelectric', 'hiddenpowerfighting', 'hiddenpowerfire', 'hiddenpowerflying', 'hiddenpowerghost', 'hiddenpowergrass', 'hiddenpowerground', 'hiddenpowerice', 'hiddenpowerpoison', 'hiddenpowerpsychic', 'hiddenpowerrock', 'hiddenpowersteel', 'hiddenpowerwater'
-                                );
-                            }
+                            
+                            const sprite = BattlePokedex[stylemonSpecies].spriteid;
+                            if (!stylemons[sprite]) stylemons[type1 + ', ' + type2] = [];
+                            if (stylemons[sprite].includes(moveid)) continue;
+                            stylemons[type1 + ', ' + type2].push(moveid);
                         }
                         learnsetidConvergence = this.nextLearnsetid(learnsetidConvergence, speciesConvergence.id);
                     }
@@ -1916,11 +1837,11 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
             const type1 = species.types[0];
             var type2 = species.types[1];
             if (type2 == undefined) type2 == type1;
-            for (const moveidConvergence of convergence[type1 + ', ' + type2]) {
+            for (const moveidConvergence of stylemons[type1 + ', ' + type2]) {
                 if (moves.includes(moveidConvergence)) continue;
                 moves.push(moveidConvergence);
             }
-            for (const moveidConvergence of convergence[type2 + ', ' + type1]) {
+            for (const moveidConvergence of stylemons[type2 + ', ' + type1]) {
                 if (moves.includes(moveidConvergence)) continue;
                 moves.push(moveidConvergence);
             }
