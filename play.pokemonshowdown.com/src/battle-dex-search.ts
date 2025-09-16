@@ -1859,29 +1859,27 @@ class BattleMoveSearch extends BattleTypedSearch<'move'> {
 		if (isStylemons) {
             var stylemons = {};
             for (const stylemonSpecies in BattlePokedex) {
-                let speciesConvergence = dex.species.get(stylemonSpecies);
-                let learnsetidConvergence = this.firstLearnsetid(speciesConvergence.id);
-                while (learnsetidConvergence) {
-                    let learnset = lsetTable.learnsets[learnsetidConvergence];
+                let speciesStyle = dex.species.get(stylemonSpecies);
+                let learnsetidStyle = this.firstLearnsetid(speciesStyle.id);
+                while (learnsetidStyle) {
+                    let learnset = lsetTable.learnsets[learnsetidStyle];
                     if (learnset) {
                         for (let moveid in learnset) {
                             let learnsetEntry = learnset[moveid];
                             const move = dex.moves.get(moveid);
-                            const minGenCode: {[gen: number]: string} = {6: 'p', 7: 'q', 8: 'g', 9: 'a'};
-                            
                             const sprite = BattlePokedex[stylemonSpecies].spriteid;
-                            if (!stylemons[sprite]) stylemons[type1 + ', ' + type2] = [];
+                            if (!stylemons[sprite]) stylemons[sprite] = [];
                             if (stylemons[sprite].includes(moveid)) continue;
                             stylemons[type1 + ', ' + type2].push(moveid);
                         }
-                        learnsetidConvergence = this.nextLearnsetid(learnsetidConvergence, speciesConvergence.id);
+                        learnsetidStyle = this.nextLearnsetid(learnsetidStyle, speciesStyle.id);
                     }
                 }
             }
             const sprite = species.spriteid;
-            for (const moveidConvergence of stylemons[sprite]) {
-                if (moves.includes(moveidConvergence)) continue;
-                moves.push(moveidConvergence);
+            for (const moveidStyle of stylemons[sprite]) {
+                if (moves.includes(moveidStyle)) continue;
+                moves.push(moveidStyle);
             }
         }
 

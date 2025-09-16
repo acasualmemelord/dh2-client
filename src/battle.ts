@@ -676,14 +676,14 @@ export class Side {
 		}
 	}
 	addSideCondition(effect: Effect, persist: boolean) {
-		let condition = effect.id;
-		if (this.sideConditions[condition]) {
-			if (condition === 'spikes' || condition === 'toxicspikes') {
-				this.sideConditions[condition][1]++;
-			}
-			this.battle.scene.addSideCondition(this.n, condition);
-			return;
-		}
+        let condition = effect.id;
+        if (this.sideConditions[condition]) {
+            if (['spikes', 'toxicspikes', 'minetrap', 'poisontrap'].includes(condition)) {
+                this.sideConditions[condition][1]++;
+            }
+            this.battle.scene.addSideCondition(this.n, condition);
+            return;
+        }
 		// Side conditions work as: [effectName, levels, minDuration, maxDuration]
 		switch (condition) {
 		case 'auroraveil':
@@ -711,6 +711,10 @@ export class Side {
 		case 'spikes':
 		case 'toxicspikes':
 		case 'stickyweb':
+		case 'stealthtrap':
+		case 'minetrap':
+		case 'poisontrap':
+		case 'bindtrap':
 			this.sideConditions[condition] = [effect.name, 1, 0, 0];
 			break;
 		case 'gmaxwildfire':

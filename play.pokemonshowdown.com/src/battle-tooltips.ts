@@ -1523,6 +1523,17 @@ class BattleTooltips {
 					if (value.abilityModify(0, 'Pixilate')) moveType = 'Fairy';
 					if (value.abilityModify(0, 'Refrigerate')) moveType = 'Ice';
 				}
+				if (moveType === 'Void') {
+					if (value.abilityModify(0, 'Bright Form')) moveType = 'Light';
+					if (value.abilityModify(0, 'Gale Form')) moveType = 'Wind';
+					if (value.abilityModify(0, 'General\'s Form')) moveType = 'Fighting';
+					if (value.abilityModify(0, 'Ghost Form')) moveType = 'Nether';
+					if (value.abilityModify(0, 'Midnight Form')) moveType = 'Dark';
+					if (value.abilityModify(0, 'Natural Form')) moveType = 'Nature';
+					if (value.abilityModify(0, 'Stream Form')) moveType = 'Water';
+					if (value.abilityModify(0, 'Unyielding Form')) moveType = 'Steel';
+					
+				}
 				if (value.abilityModify(0, 'Normalize')) moveType = 'Normal';
 			}
 
